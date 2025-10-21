@@ -1,17 +1,30 @@
+using App.Configuration.Options;
 using App.Extensions;
 using App.Slack.Handler;
-using SlackNet;
 using SlackNet.AspNetCore;
 using SlackNet.Blocks;
-using SlackNet.Extensions.DependencyInjection;
 
 namespace App;
 
 public static class Dependencies
 {
+    public const string SlackRootPath = "api/v1/slack";
+    
     public static WebApplicationBuilder AddCygniBotDependencies(
         this WebApplicationBuilder builder)
     {
+        // Configuration
+        builder.Configuration
+            .AddJsonFile(
+                "secrets.json",
+                optional: true,
+                reloadOnChange: true)
+            .AddEnvironmentVariables();
+        
+        // Configuration-Options
+        builder.Services
+            .AddConfigurationOptions<SlackOptions>(builder.Configuration);
+        
         // Logging
         builder.ApplicationUseSerilog();
         
@@ -19,16 +32,21 @@ public static class Dependencies
         builder.Services.AddOpenApi();
         
         // Handlers
-        builder.Services.AddScoped<AttendanceButtonClickHandler>();
+        builder.Services.AddSingleton<AttendanceButtonClickHandler>();
         
         // Slack
         var slackEndpointConfiguration = new SlackEndpointConfiguration()
-            .MapToPrefix("api/v1/slack");
+            .MapToPrefix(SlackRootPath);
         builder.Services.AddSingleton(slackEndpointConfiguration);
-        ServiceCollectionExtensions.AddSlackNet(builder.Services, c =>
+        builder.Services.AddSlackNet((AspNetSlackServiceConfiguration configure) =>
         {
-            c.UseApiToken("<your bot or user OAuth token here>");
-            c.RegisterBlockActionHandler<ButtonAction, AttendanceButtonClickHandler>("attending_click");
+            var slackOptions = builder
+                .Configuration
+                .GetSection(SlackOptions.SectionName)
+                .Get<SlackOptions>() ?? throw new ArgumentNullException(nameof(SlackOptions));
+            
+            configure.UseApiToken(slackOptions.BotToken);
+            configure.RegisterBlockActionHandler<ButtonAction, AttendanceButtonClickHandler>(AttendanceButtonClickHandler.ActionId);
         });
 
         return builder;

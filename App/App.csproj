@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 
-    <Version>0.0.1</Version>
+    <Version>0.1.0</Version>
     <AssemblyInformationalVersion>$(Version)-$(GitCommitHash)</AssemblyInformationalVersion>
   </PropertyGroup>
 

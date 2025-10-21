@@ -3,10 +3,14 @@ using SlackNet.Interaction;
 
 namespace App.Slack.Handler;
 
-public class AttendanceButtonClickHandler : IBlockActionHandler<ButtonAction>
+public class AttendanceButtonClickHandler(
+    ILogger<AttendanceButtonClickHandler> logger) : IBlockActionHandler<ButtonAction>
 {
+    public const string ActionId = "attending_click";
+    
     public Task Handle(ButtonAction action, BlockActionRequest request)
     {
-        throw new NotImplementedException();
+        logger.LogInformation("Hello {ActionValue}", action.Value);
+        return Task.CompletedTask;
     }
 }
