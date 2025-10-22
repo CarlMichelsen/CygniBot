@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+
+    <Version>0.1.0</Version>
+    <AssemblyInformationalVersion>$(Version)-$(GitCommitHash)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Scalar/OpenApi -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-rc.2.25502.107" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.9.0" />
+
+    <!-- Logging -->
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.1-dev-02317" />
+    
+    <!-- Slack -->
+    <PackageReference Include="SlackNet.AspNetCore" Version="0.17.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\.dockerignore">
+      <Link>.dockerignore</Link>
+    </Content>
+    <Content Include="..\Dockerfile">
+      <Link>Dockerfile</Link>
+    </Content>
+  </ItemGroup>
+
+</Project>
