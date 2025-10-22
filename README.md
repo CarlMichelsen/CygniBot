@@ -13,7 +13,8 @@ A Slack bot for Cygni Copenhagen. (Maybe we'll let the swedes use it too)
 Add a json file called ```secrets.json``` to the ```App``` project.
 There is a secrets template file called ```secrets.template.json```.
 
-Whenever another secret is required to run CygniBot locally - please add it to the ```secrets.template.json``` file :)
+Whenever another secret is required to run CygniBot locally - please add the required configuration to the ```secrets.template.json``` file :)
+*(Don't git track the secret)*
 
 ## Installing the bot in Slack
 
@@ -35,14 +36,14 @@ Whenever another secret is required to run CygniBot locally - please add it to t
 ### Enable Interactivity
 1. In the sidebar, click Interactivity & Shortcuts
 2. Toggle Interactivity → ON
-3. In Request URL, enter the public endpoint that Slack can reach. (**Important**: add ```api/v1/slack``` at the end of the domain)
+3. In Request URL, enter the public endpoint that Slack can reach. (**Important**: add ```/api/v1/slack/action``` at the end of the domain)
 4. If you’re developing locally, use ngrok (https://ngrok.com/download)
 ```bash
 ngrok http http://localhost:5089
 ```
 Copy the HTTPS URL that ngrok shows and append /slack/interact, for example
 ```bash
-example: https://abcd1234.ngrok.io/slack/interact
+example: https://abcd1234.ngrok.io/api/v1/slack/action
 ```
 5. Click Save Changes (Slack will verify the endpoint right away — if it’s valid, you’ll see a ✅ checkmark next to it.)
 

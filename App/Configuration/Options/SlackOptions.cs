@@ -9,4 +9,12 @@ public class SlackOptions : IConfigurationOptions
     [Required]
     [MinLength(1)]
     public required string BotToken { get; init; }
+    
+    /// <summary>
+    /// This is a secret that is used to verify that slack requests are actually coming from slack.
+    /// This value can be found on the 'Basic information' page in the *Your-Application* page.
+    /// </summary>
+    [Required]
+    [MinLength(1)]
+    public required string SigningSecret { get; init; }
 }

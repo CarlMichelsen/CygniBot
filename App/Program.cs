@@ -13,6 +13,8 @@ builder.AddCygniBotDependencies();
 
 var app = builder.Build();
 
+app.UseSlackNet();
+
 app.MapOpenApi();
 
 app.MapScalarApiReference(options =>
@@ -22,14 +24,7 @@ app.MapScalarApiReference(options =>
         .WithTheme(ScalarTheme.Mars);
 });
 
-app.UseSlackNet();
-
-app.MapGet("/version", ([FromServices] ILogger<Program> logger) =>
-{
-    var version = ApplicationConstants.Version;
-    logger.LogInformation("Version endpoint hit {Version}", version);
-    return Results.Ok(version);
-});
+app.MapGet("/version", ([FromServices] ILogger<Program> logger) => Results.Ok(ApplicationConstants.Version));
 
 using (var scope = app.Services.CreateScope())
 {
@@ -40,16 +35,21 @@ using (var scope = app.Services.CreateScope())
     await slackApiClient.Chat.PostMessage(new Message
     {
         Channel = "#development_slack_integration",
-        Text = "Hello from C# 🎉",
         Blocks =
         [
+            new SectionBlock
+            {
+                Text = new Markdown { Text = "Hello from C# 🎉" }
+            },
             new ActionsBlock
             {
                 Elements =
                 [
                     new Button
                     {
-                        Text = new PlainText { Text = "Hello!" }, ActionId = AttendanceButtonClickHandler.ActionId, Value = "A|green"
+                        ActionId = AttendanceButtonClickHandler.ActionId,
+                        Text = new PlainText { Text = "Hello!" },
+                        Value = "A|green"
                     },
                 ]
             }

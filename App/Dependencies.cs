@@ -8,45 +8,46 @@ namespace App;
 
 public static class Dependencies
 {
-    public const string SlackRootPath = "api/v1/slack";
-    
-    public static WebApplicationBuilder AddCygniBotDependencies(
-        this WebApplicationBuilder builder)
+    public const string SlackPrefix = "api/v1/slack";
+
+    public static WebApplicationBuilder AddCygniBotDependencies(this WebApplicationBuilder builder)
     {
         // Configuration
         builder.Configuration
-            .AddJsonFile(
-                "secrets.json",
-                optional: true,
-                reloadOnChange: true)
+            .AddJsonFile("secrets.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables();
-        
-        // Configuration-Options
-        builder.Services
-            .AddConfigurationOptions<SlackOptions>(builder.Configuration);
-        
+
+        // Options
+        builder.Services.Configure<SlackOptions>(
+            builder.Configuration.GetSection(SlackOptions.SectionName));
+
         // Logging
         builder.ApplicationUseSerilog();
-        
-        // OpenApi
         builder.Services.AddOpenApi();
-        
-        // Handlers
+
+        // Slack handlers
         builder.Services.AddSingleton<AttendanceButtonClickHandler>();
         
-        // Slack
-        var slackEndpointConfiguration = new SlackEndpointConfiguration()
-            .MapToPrefix(SlackRootPath);
-        builder.Services.AddSingleton(slackEndpointConfiguration);
-        builder.Services.AddSlackNet((AspNetSlackServiceConfiguration configure) =>
+        var conf = new SlackEndpointConfiguration();
+        conf.MapToPrefix(SlackPrefix);
+        conf.UseSocketMode(false);
+        builder.Services.AddSingleton(conf);
+
+        // SlackNet
+        builder.Services.AddSlackNet(c =>
         {
-            var slackOptions = builder
-                .Configuration
-                .GetSection(SlackOptions.SectionName)
+            var slackOptions = builder.Configuration.GetSection(SlackOptions.SectionName)
                 .Get<SlackOptions>() ?? throw new ArgumentNullException(nameof(SlackOptions));
-            
-            configure.UseApiToken(slackOptions.BotToken);
-            configure.RegisterBlockActionHandler<ButtonAction, AttendanceButtonClickHandler>(AttendanceButtonClickHandler.ActionId);
+
+            // API token
+            c.UseApiToken(slackOptions.BotToken);
+
+            // Verify that requests coming in are actually from slack...
+            c.UseSigningSecret(slackOptions.SigningSecret);
+
+            // Handlers
+            c.RegisterBlockActionHandler<ButtonAction, AttendanceButtonClickHandler>(
+                AttendanceButtonClickHandler.ActionId);
         });
 
         return builder;
