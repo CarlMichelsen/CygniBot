@@ -41,7 +41,7 @@ Whenever another secret is required to run CygniBot locally - please add the req
 ```bash
 ngrok http http://localhost:5089
 ```
-Copy the HTTPS URL that ngrok shows and append /slack/interact, for example
+Copy the HTTPS URL that ngrok shows and append /api/v1/slack/action, for example
 ```bash
 example: https://abcd1234.ngrok.io/api/v1/slack/action
 ```
@@ -50,7 +50,7 @@ example: https://abcd1234.ngrok.io/api/v1/slack/action
 ### Add a slash command (there are no commands yet - this step should be skipped)
 1. Go to Slash Commands → Create New Command
 2. Choose a command name (e.g. ```/weekly-report```)
-3. Set the Request URL to the same base address as above (e.g. ```/slack/command```)
+3. Set the Request URL to the same base address as above (e.g. ```/api/v1/slack/command```)
 4. Click Save
 
 ### Reinstall the App (after config changes)
@@ -63,4 +63,4 @@ You should now be able to:
 - Mention your bot in a channel or DM it
 - See it listed under Apps in Slack
 - Run any slash commands (if configured)
-- Click interactive buttons in messages (Slack should POST to your /slack/interact endpoint)
+- Click interactive buttons in messages (Slack should POST to your /api/v1/slack/action endpoint)
