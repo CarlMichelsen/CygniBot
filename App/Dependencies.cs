@@ -1,5 +1,8 @@
 using App.Configuration.Options;
 using App.Extensions;
+using App.HostedServices;
+using App.Queue;
+using App.Slack;
 using App.Slack.Handler;
 using SlackNet.AspNetCore;
 using SlackNet.Blocks;
@@ -17,23 +20,31 @@ public static class Dependencies
             .AddJsonFile("secrets.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables();
 
+        builder.Services
+            .AddSingleton(TimeProvider.System);
+
         // Options
-        builder.Services.Configure<SlackOptions>(
-            builder.Configuration.GetSection(SlackOptions.SectionName));
+        builder.Services
+            .AddConfigurationOptions<SlackOptions>(builder.Configuration);
 
         // Logging
         builder.ApplicationUseSerilog();
         builder.Services.AddOpenApi();
 
         // Slack handlers
-        builder.Services.AddSingleton<AttendanceButtonClickHandler>();
+        builder.Services
+            .AddHostedService<ButtonQueueActionBackgroundService>()
+            .AddHostedService<SundayAttendanceBackgroundService>()
+            .AddSingleton<AttendanceButtonClickHandler>();
         
+        // Queues
+        builder.Services.AddSingleReaderChannel<ButtonQueueAction>();
+        
+        // SlackNet
         var conf = new SlackEndpointConfiguration();
         conf.MapToPrefix(SlackPrefix);
         conf.UseSocketMode(false);
         builder.Services.AddSingleton(conf);
-
-        // SlackNet
         builder.Services.AddSlackNet(c =>
         {
             var slackOptions = builder.Configuration.GetSection(SlackOptions.SectionName)
@@ -49,6 +60,10 @@ public static class Dependencies
             c.RegisterBlockActionHandler<ButtonAction, AttendanceButtonClickHandler>(
                 AttendanceButtonClickHandler.ActionId);
         });
+        
+        // General purpose services
+        builder.Services
+            .AddScoped<WeeklyMessageFactory>();
 
         return builder;
     }

@@ -27,11 +27,18 @@ Whenever another secret is required to run CygniBot locally - please add the req
 ### Configure OAuth & Permissions
 1. In the left sidebar, select OAuth & Permissions
 2. Scroll down to Bot Token Scopes and click Add an OAuth Scope
-3. Add the following scopes: ```chat:write```, ```chat:write.public```, ```commands```, ```users:read``` (does not use commands yet)
+3. Add the following scopes:
+ - ```chat:write```
+ - ```chat:write.public```
+ - ```commands``` (does not use commands yet)
+ - ```users:read```
+ - ```channels:history```
+ - ```groups:history```
+ - ```im:history```
+ - ```mpim:history```
 4. Scroll back to the top and click Install to Workspace
 5. Slack will prompt for authorization — approve it.
 6. After installation, copy the Bot User OAuth Token (starts with xoxb-) use it in the CygniBot configuration ```Slack__BotToken```.
-
 
 ### Enable Interactivity
 1. In the sidebar, click Interactivity & Shortcuts
@@ -41,7 +48,7 @@ Whenever another secret is required to run CygniBot locally - please add the req
 ```bash
 ngrok http http://localhost:5089
 ```
-Copy the HTTPS URL that ngrok shows and append /slack/interact, for example
+Copy the HTTPS URL that ngrok shows and append /api/v1/slack/action, for example
 ```bash
 example: https://abcd1234.ngrok.io/api/v1/slack/action
 ```
@@ -50,7 +57,7 @@ example: https://abcd1234.ngrok.io/api/v1/slack/action
 ### Add a slash command (there are no commands yet - this step should be skipped)
 1. Go to Slash Commands → Create New Command
 2. Choose a command name (e.g. ```/weekly-report```)
-3. Set the Request URL to the same base address as above (e.g. ```/slack/command```)
+3. Set the Request URL to the same base address as above (e.g. ```/api/v1/slack/command```)
 4. Click Save
 
 ### Reinstall the App (after config changes)
@@ -63,4 +70,9 @@ You should now be able to:
 - Mention your bot in a channel or DM it
 - See it listed under Apps in Slack
 - Run any slash commands (if configured)
-- Click interactive buttons in messages (Slack should POST to your /slack/interact endpoint)
+- Click interactive buttons in messages (Slack should POST to your /api/v1/slack/action endpoint)
+
+## Useful commands
+```sh
+ngrok http http://localhost:5089
+```
