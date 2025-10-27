@@ -1,4 +1,5 @@
 using App;
+using App.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Scalar.AspNetCore;
 using SlackNet.AspNetCore;
@@ -22,6 +23,6 @@ app.MapScalarApiReference(options =>
 
 app.MapGet("/version", ([FromServices] ILogger<Program> logger) => Results.Ok(ApplicationConstants.Version));
 
-// await app.Services.SendTestMessage();
+await app.Services.SendTestMessage();
 
 app.Run();

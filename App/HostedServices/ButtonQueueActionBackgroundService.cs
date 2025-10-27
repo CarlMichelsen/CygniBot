@@ -11,6 +11,7 @@ public class ButtonQueueActionBackgroundService(
     Channel<ButtonQueueAction> channel,
     IServiceScopeFactory serviceScopeFactory) : BackgroundService
 {
+    // TODO: Move business-logic into another class
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (await channel.Reader.WaitToReadAsync(stoppingToken))
@@ -64,6 +65,9 @@ public class ButtonQueueActionBackgroundService(
                     buttonQueueAction.Request.Channel.Id,
                     buttonQueueAction.Request.Message.Ts);
                 await slackClient.Chat.Update(messageUpdate, stoppingToken);
+                
+                // Avoid spamming slack
+                await Task.Delay(TimeSpan.FromMilliseconds(100), stoppingToken);
             }
             catch (Exception e)
             {
