@@ -17,4 +17,11 @@ public class SlackOptions : IConfigurationOptions
     [Required]
     [MinLength(1)]
     public required string SigningSecret { get; init; }
+    
+    /// <summary>
+    /// Channel identifier for the channel that will receive the office-attendance messages. 
+    /// </summary>
+    [Required]
+    [MinLength(1)]
+    public required string Channel { get; init; }
 }

@@ -27,11 +27,18 @@ Whenever another secret is required to run CygniBot locally - please add the req
 ### Configure OAuth & Permissions
 1. In the left sidebar, select OAuth & Permissions
 2. Scroll down to Bot Token Scopes and click Add an OAuth Scope
-3. Add the following scopes: ```chat:write```, ```chat:write.public```, ```commands```, ```users:read``` (does not use commands yet)
+3. Add the following scopes:
+ - ```chat:write```
+ - ```chat:write.public```
+ - ```commands``` (does not use commands yet)
+ - ```users:read```
+ - ```channels:history```
+ - ```groups:history```
+ - ```im:history```
+ - ```mpim:history```
 4. Scroll back to the top and click Install to Workspace
 5. Slack will prompt for authorization — approve it.
 6. After installation, copy the Bot User OAuth Token (starts with xoxb-) use it in the CygniBot configuration ```Slack__BotToken```.
-
 
 ### Enable Interactivity
 1. In the sidebar, click Interactivity & Shortcuts
@@ -64,3 +71,8 @@ You should now be able to:
 - See it listed under Apps in Slack
 - Run any slash commands (if configured)
 - Click interactive buttons in messages (Slack should POST to your /api/v1/slack/action endpoint)
+
+## Useful commands
+```sh
+ngrok http http://localhost:5089
+```
