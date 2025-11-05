@@ -119,7 +119,7 @@ public static class WeeklyAttendanceMessageMapper
                 Elements = [
                     new Button
                     {
-                        ActionId = AttendanceButtonClickHandler.ActionId,
+                        ActionId = AttendanceVoteHandler.ActionId,
                         Text = "️✅ Attending",
                         Value = identifier,
                         Style = ButtonStyle.Primary,

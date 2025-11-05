@@ -33,12 +33,12 @@ public static class Dependencies
 
         // Slack handlers
         builder.Services
-            .AddHostedService<ButtonQueueActionBackgroundService>()
+            .AddHostedService<AttendanceVoteQueueBackgroundService>()
             .AddHostedService<SundayAttendanceBackgroundService>()
-            .AddSingleton<AttendanceButtonClickHandler>();
+            .AddSingleton<AttendanceVoteHandler>();
         
         // Queues
-        builder.Services.AddSingleReaderChannel<ButtonQueueAction>();
+        builder.Services.AddSingleReaderChannel<AttendanceVote>();
         
         // SlackNet
         var conf = new SlackEndpointConfiguration();
@@ -57,12 +57,13 @@ public static class Dependencies
             c.UseSigningSecret(slackOptions.SigningSecret);
 
             // Handlers
-            c.RegisterBlockActionHandler<ButtonAction, AttendanceButtonClickHandler>(
-                AttendanceButtonClickHandler.ActionId);
+            c.RegisterBlockActionHandler<ButtonAction, AttendanceVoteHandler>(
+                AttendanceVoteHandler.ActionId);
         });
         
         // General purpose services
         builder.Services
+            .AddScoped<AttendanceVoteProcessor>()
             .AddScoped<WeeklyMessageFactory>();
 
         return builder;
