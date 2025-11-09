@@ -24,4 +24,9 @@ public class SlackOptions : IConfigurationOptions
     [Required]
     [MinLength(1)]
     public required string Channel { get; init; }
+    
+    /// <summary>
+    /// The api endpoint for slack.
+    /// </summary>
+    public required Uri ApiEndpoint { get; init; }
 }

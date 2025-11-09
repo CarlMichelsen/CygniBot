@@ -16,7 +16,16 @@ public class AttendanceVoteHandler(
             request.User.Id,
             request.Channel.Id, 
             request.Message.Ts,
-            action.Value);
+            IdentifierToDateOnly(action.Value));
         await channel.Writer.WriteAsync(vote);
+    }
+    
+    public static DateOnly IdentifierToDateOnly(string value)
+    {
+        var identifierDateArr = value.Split('.');
+        return new DateOnly(
+            year: int.Parse(identifierDateArr[0]),
+            month: int.Parse(identifierDateArr[1]),
+            day: int.Parse(identifierDateArr[2]));
     }
 }

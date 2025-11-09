@@ -1,10 +1,14 @@
+using App.Configuration.Options;
 using App.Queue;
 using App.Slack.Mapper;
+using Microsoft.Extensions.Options;
 using SlackNet;
+using SlackNet.WebApi;
 
 namespace App.Slack;
 
 public class AttendanceVoteProcessor(
+    IOptionsSnapshot<SlackOptions> slackOptions,
     ISlackApiClient slackApiClient)
 {
     public async Task Process(
@@ -16,29 +20,36 @@ public class AttendanceVoteProcessor(
             latestTs: attendanceVote.MessageTs,
             inclusive: true,
             limit: 1);
-        var msg = historyResponse.Messages.First();
         
-        var weeklyAttendanceMessage = WeeklyAttendanceMessageMapper.Map(msg);
-        
-        var identifier = attendanceVote.Value;
-        var dateOnly = WeeklyAttendanceMessageMapper.IdentifierToDateOnly(identifier);
-        var clickerTag = $"<@{attendanceVote.UserId}>";
+        var slackWeeklyAttendanceMessage = historyResponse.Messages.First();
+        var weeklyAttendanceMessage = WeeklyAttendanceMessageMapper
+            .GetMessageFromMetadata(slackWeeklyAttendanceMessage)
+            .ToLatestVersion();
 
-        var day = weeklyAttendanceMessage.Blocks.FirstOrDefault(b => b.Date == dateOnly);
-        var attendingOnDay = day?.Attending ?? [];
-        if (attendingOnDay.Exists(s => s == clickerTag))
+        var block = weeklyAttendanceMessage
+            .Blocks
+            .Find(b => b.Date == attendanceVote.Value)
+                ?? throw new Exception("Unable to find a weekly attendance message block for the given date");
+
+        var isAttending = block.Attending.Find(a => a == attendanceVote.UserId);
+        if (isAttending is null)
         {
-            attendingOnDay.Remove(clickerTag);
+            block.Attending.Add(attendanceVote.UserId);
         }
         else
         {
-            attendingOnDay.Add(clickerTag);
+            block.Attending.Remove(isAttending);
         }
         
-        var messageUpdate = WeeklyAttendanceMessageMapper.MapMessageUpdate(
+        var message = WeeklyAttendanceMessageMapper.MapMessage(
             weeklyAttendanceMessage,
-            attendanceVote.ChannelId,
-            attendanceVote.MessageTs);
-        await slackApiClient.Chat.Update(messageUpdate);
+            slackOptions.Value.Channel);
+        await slackApiClient.Chat.Update(new MessageUpdate
+        {
+            ChannelId = attendanceVote.ChannelId,
+            Ts = attendanceVote.MessageTs,
+            Blocks = message.Blocks,
+            Text = message.Text,
+        });
     }
 }

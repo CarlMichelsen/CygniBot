@@ -57,8 +57,8 @@ public static class Dependencies
             c.UseSigningSecret(slackOptions.SigningSecret);
 
             // Handlers
-            c.RegisterBlockActionHandler<ButtonAction, AttendanceVoteHandler>(
-                AttendanceVoteHandler.ActionId);
+            c.RegisterBlockActionHandler<ButtonAction, AttendanceVoteHandler>(AttendanceVoteHandler.ActionId);
+            c.RegisterSlashCommandHandler<SendMessageCommandHandler>(SendMessageCommandHandler.CommandIdentifier);
         });
         
         // General purpose services
