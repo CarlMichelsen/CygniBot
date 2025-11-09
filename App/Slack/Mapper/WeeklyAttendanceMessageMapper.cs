@@ -1,9 +1,11 @@
-﻿using App.Slack.Handler;
+﻿using System.Text;
+using System.Text.Json;
+using App.Slack.Handler;
 using App.Slack.Model;
+using App.Slack.Model.V1;
 using SlackNet.Blocks;
 using SlackNet.Events;
 using SlackNet.WebApi;
-using Button = SlackNet.Blocks.Button;
 
 namespace App.Slack.Mapper;
 
@@ -12,106 +14,60 @@ public static class WeeklyAttendanceMessageMapper
     public const char AttendanceDelimiter = ',';
     
     public const string NoAttendanceString = "-";
-    
-    public static DateOnly IdentifierToDateOnly(string identifierString)
-    {
-        var identifierDateArr = identifierString.Split('.');
-        return new DateOnly(
-            year: int.Parse(identifierDateArr[0]),
-            month: int.Parse(identifierDateArr[1]),
-            day: int.Parse(identifierDateArr[2]));
-    }
-    
-    public static WeeklyAttendanceMessage Map(MessageEvent messageEvent)
-    {
-        var blocks = messageEvent.Blocks ?? throw new NullReferenceException("Unable to find request message blocks");
 
-        var titleBlock = blocks.OfType<SectionBlock>().First(b => b.BlockId == nameof(WeeklyAttendanceMessage.Title));
-        var actionsBlocks = blocks
-            .OfType<ActionsBlock>()
-            .Where(b => b.BlockId.StartsWith("actions-"))
-            .ToList();
+    public static BaseWeeklyAttendanceMessage GetMessageFromMetadata(MessageEvent messageEvent)
+    {
+        var metadataJson = Encoding.UTF8.GetString(Convert.FromBase64String(messageEvent.Text));
+
+        var deserializedBaseWeeklyAttendanceMessage = JsonSerializer
+            .Deserialize<BaseWeeklyAttendanceMessage>(metadataJson)!;
+        ArgumentNullException.ThrowIfNull(deserializedBaseWeeklyAttendanceMessage);
         
-        var dayTitleBlocks = blocks
-            .OfType<SectionBlock>()
-            .Where(b => b.BlockId.StartsWith("title-"))
-            .ToList();
-        
-        var attendanceBlocks = blocks
-            .OfType<SectionBlock>()
-            .Where(b => b.BlockId.StartsWith("attending-"))
-            .ToList();
-        
-        var days = new List<DayBlock>();
-        foreach (var actionBlock in actionsBlocks)
-        {
-            var button = actionBlock.Elements.OfType<Button>().First();
-            var identifier = button.Value;
-            var title = dayTitleBlocks.First(b => b.BlockId.EndsWith(identifier)).Text.Text!;
-            var attendingString = attendanceBlocks.FirstOrDefault(b => b.BlockId.EndsWith(identifier))?.Text.Text;
-            var attending = attendingString == NoAttendanceString
-                ? []
-                : attendingString?.Split(AttendanceDelimiter).ToList() ?? [];
-            
-            days.Add(new DayBlock
-            {
-                Title = title,
-                Attending = attending,
-                Date = IdentifierToDateOnly(identifier)
-            });
-        }
-        
-        return new WeeklyAttendanceMessage
-        {
-            Title = titleBlock.Text.Text,
-            Blocks = days
-        };
+        var message = deserializedBaseWeeklyAttendanceMessage.ToLatestVersion();
+        ArgumentNullException.ThrowIfNull(message);
+
+        return message;
     }
     
-    public static MessageUpdate MapMessageUpdate(WeeklyAttendanceMessage weeklyAttendanceMessage, string channelId, string ts)
+    public static Message MapMessage(
+        BaseWeeklyAttendanceMessage baseWeeklyAttendanceMessage,
+        string channel)
     {
-        var message = MapMessage(weeklyAttendanceMessage, channelId);
-        return new MessageUpdate
-        {
-            ChannelId = message.Channel,
-            Ts = ts,
-            Blocks = message.Blocks,
-        };
-    }
-    
-    public static Message MapMessage(WeeklyAttendanceMessage weeklyAttendanceMessage, string channel)
-    {
+        var message = baseWeeklyAttendanceMessage.ToLatestVersion();
+        ArgumentNullException.ThrowIfNull(message);
+        
         var msg = new Message
         {
             Channel = channel,
+            Text = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize<BaseWeeklyAttendanceMessage>(message))),
             Blocks =
             [
-                CreateTitleBlock(weeklyAttendanceMessage),
-                ..weeklyAttendanceMessage.Blocks.SelectMany(CreateDayBlock)
+                CreateTitleBlock(message),
+                ..message.Blocks.SelectMany(CreateDayBlock)
             ]
         };
 
         return msg;
     }
-
-    private static Block CreateTitleBlock(WeeklyAttendanceMessage weeklyAttendanceMessage)
+    
+    private static Block CreateTitleBlock(WeeklyAttendanceMessageV1 baseWeeklyAttendanceMessage)
     {
         return new SectionBlock
         {
-            BlockId = nameof(WeeklyAttendanceMessage.Title),
-            Text = weeklyAttendanceMessage.Title,
+            BlockId = nameof(WeeklyAttendanceMessageV1.Title),
+            Text = baseWeeklyAttendanceMessage.Title,
         };
     }
     
-    private static List<Block> CreateDayBlock(DayBlock dayBlock)
+    private static List<Block> CreateDayBlock(DayBlockV1 baseDayBlock)
     {
-        var identifier = dayBlock.Date.GetIdentifier();
+        var identifier = baseDayBlock.Date.GetIdentifier();
         List<Block> list =
         [
             new SectionBlock
             {
                 BlockId = $"title-{identifier}",
-                Text = new Markdown(dayBlock.Title),
+                Text = new Markdown(baseDayBlock.Title),
             },
             new ActionsBlock
             {
@@ -119,7 +75,7 @@ public static class WeeklyAttendanceMessageMapper
                 Elements = [
                     new Button
                     {
-                        ActionId = AttendanceButtonClickHandler.ActionId,
+                        ActionId = AttendanceVoteHandler.ActionId,
                         Text = "️✅ Attending",
                         Value = identifier,
                         Style = ButtonStyle.Primary,
@@ -128,7 +84,7 @@ public static class WeeklyAttendanceMessageMapper
             },
         ];
 
-        var attendingText = string.Join(AttendanceDelimiter, dayBlock.Attending);
+        var attendingText = string.Join(AttendanceDelimiter, baseDayBlock.Attending.Select(userId => $"<@{userId}>"));
         list.Add(new SectionBlock
         {
             BlockId = $"attending-{identifier}",

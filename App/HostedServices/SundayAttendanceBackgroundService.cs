@@ -28,8 +28,12 @@ public class SundayAttendanceBackgroundService(
                     nameof(SundayAttendanceBackgroundService));
 
                 await RunJob();
-            
+
                 await Task.Delay(Interval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                /* Ignore this */
             }
             catch (Exception e)
             {

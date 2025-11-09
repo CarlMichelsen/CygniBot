@@ -20,7 +20,7 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.1-dev-02317" />
         
         <!-- Slack -->
-        <PackageReference Include="SlackNet.AspNetCore" Version="0.17.4" />
+        <PackageReference Include="SlackNet.AspNetCore" Version="0.17.5" />
     </ItemGroup>
     
     <ItemGroup>

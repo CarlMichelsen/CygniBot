@@ -1,29 +1,29 @@
 ﻿using System.ComponentModel;
-using App.Slack.Model;
+using App.Slack.Model.V1;
 
 namespace App.Slack;
 
 public class WeeklyMessageFactory
 {
-    public WeeklyAttendanceMessage CreateMessage(int week, int year, params DayOfWeek[] days)
+    public WeeklyAttendanceMessageV1 CreateMessage(int week, int year, params DayOfWeek[] days)
     {
         var blocks = days
             .OrderBy(d => (int)d)
             .Select(d => CreateDayBlock(week, year, d))
             .ToList();
-        return new WeeklyAttendanceMessage
+        return new WeeklyAttendanceMessageV1
         {
             Title = $":spiral_calendar_pad: Week {week} CBY Office Attendance",
-            Blocks = blocks
+            Blocks = blocks,
         };
     }
 
-    private DayBlock CreateDayBlock(int week, int year, DayOfWeek day)
+    private DayBlockV1 CreateDayBlock(int week, int year, DayOfWeek day)
     {
         var dayTitle = Enum.GetName(day) ?? throw new InvalidEnumArgumentException();
         var date = DateHelpers.GetDateFromWeek(year, week, day);
         
-        return new DayBlock
+        return new DayBlockV1
         {
             Title = $"{dayTitle} - {date.ToString("dd MMM")}",
             Date = DateHelpers.GetDateFromWeek(year, week, day),

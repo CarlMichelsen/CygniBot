@@ -54,9 +54,9 @@ example: https://abcd1234.ngrok.io/api/v1/slack/action
 ```
 5. Click Save Changes (Slack will verify the endpoint right away — if it’s valid, you’ll see a ✅ checkmark next to it.)
 
-### Add a slash command (there are no commands yet - this step should be skipped)
+### Add a slash command
 1. Go to Slash Commands → Create New Command
-2. Choose a command name (e.g. ```/weekly-report```)
+2. Choose a command name (e.g. ```/sendmessage```)
 3. Set the Request URL to the same base address as above (e.g. ```/api/v1/slack/command```)
 4. Click Save
 
