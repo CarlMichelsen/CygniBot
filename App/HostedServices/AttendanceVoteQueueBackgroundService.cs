@@ -25,7 +25,10 @@ public class AttendanceVoteQueueBackgroundService(
             }
             catch (Exception e)
             {
-                logger.LogCritical(e, $"Unhandled exception in {nameof(AttendanceVoteQueueBackgroundService)}");
+                logger.LogCritical(
+                    e, 
+                    "Unhandled exception in {ServiceName}",
+                    nameof(AttendanceVoteQueueBackgroundService));
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken); // Wait a little bit before continuing after error
             }
         }
