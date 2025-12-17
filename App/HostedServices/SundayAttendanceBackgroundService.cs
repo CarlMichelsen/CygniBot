@@ -13,20 +13,18 @@ public class SundayAttendanceBackgroundService(
 {
     private static readonly TimeOnly Time = new(9, 0);
     
-    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan Interval = TimeSpan.FromHours(1);
     
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("{ServiceName} is running.", nameof(SundayAttendanceBackgroundService));
+        logger.LogInformation(
+            "{ServiceName} is running.",
+            nameof(SundayAttendanceBackgroundService));
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                logger.LogInformation(
-                    "{ServiceName} is running an interval check.",
-                    nameof(SundayAttendanceBackgroundService));
-
                 await RunJob();
 
                 await Task.Delay(Interval, stoppingToken);

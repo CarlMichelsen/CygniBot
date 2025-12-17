@@ -8,6 +8,7 @@ using SlackNet.WebApi;
 namespace App.Slack;
 
 public class AttendanceVoteProcessor(
+    ILogger<AttendanceVoteProcessor> logger,
     IOptionsSnapshot<SlackOptions> slackOptions,
     ISlackApiClient slackApiClient)
 {
@@ -31,14 +32,27 @@ public class AttendanceVoteProcessor(
             .Find(b => b.Date == attendanceVote.Value)
                 ?? throw new Exception("Unable to find a weekly attendance message block for the given date");
 
-        var isAttending = block.Attending.Find(a => a == attendanceVote.UserId);
+        var userInfo = await slackApiClient.Users.Info(attendanceVote.UserId)
+            ?? throw new Exception($"Unable to get user info for voting user '{attendanceVote.UserId}'");
+
+        var isAttending = block.Attending.Find(a => a == userInfo.Id);
         if (isAttending is null)
         {
-            block.Attending.Add(attendanceVote.UserId);
+            block.Attending.Add(userInfo.Id);
+            logger.LogInformation(
+                "'{Username}' <{UserId}> voted to attend on {DateOnly}",
+                userInfo.Name,
+                userInfo.Id,
+                attendanceVote.Value);
         }
         else
         {
             block.Attending.Remove(isAttending);
+            logger.LogInformation(
+                "'{Username}' <{UserId}> removed their vote to attend on {DateOnly}",
+                userInfo.Name,
+                userInfo.Id,
+                attendanceVote.Value);
         }
         
         var message = WeeklyAttendanceMessageMapper.MapMessage(
